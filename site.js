@@ -1,10 +1,10 @@
-/* Erlauftalerhof – edit centralized image sources in PHOTO_LIBRARY below. */
+/* Erlauftalerhof — centralized image library; replace sample URLs with approved property photographs. */
 const PHOTO_LIBRARY = {
   'hotel-aussenansicht': 'https://images.unsplash.com/photo-1510798831971-661eb04b3739?auto=format&fit=crop&w=2200&q=85',
-  'zimmer-doppelzimmer': 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=1400&q=82',
+  'zimmer-doppelzimmer': 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=1600&q=82',
   'zimmer-einzelzimmer': 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=1400&q=82',
-  'zimmer-familienzimmer': 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=1400&q=82',
-  'restaurant-innenbereich': 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1800&q=82',
+  'zimmer-familienzimmer': 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=1600&q=82',
+  'restaurant-innenbereich': 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=2000&q=82',
   'restaurant-speisen': 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1400&q=82',
   'fruehstueck': 'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?auto=format&fit=crop&w=1400&q=82',
   'terrasse': 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1400&q=82',
@@ -24,15 +24,25 @@ const navLinks = [
 const currentPage = location.pathname.split('/').pop() || 'index.html';
 const header = document.querySelector('#site-header');
 if (header) {
-  header.innerHTML = `<div class="nav-wrap"><a class="brand" href="index.html" aria-label="Erlauftalerhof – Startseite"><span class="brand-mark" aria-hidden="true">E</span><span>Erlauftalerhof<small>Kienberg · Erlauftal</small></span></a><button class="menu-toggle" aria-expanded="false" aria-controls="main-nav"><span class="menu-icon" aria-hidden="true">☰</span><span class="sr-only">Menü öffnen</span></button><nav id="main-nav" aria-label="Hauptnavigation"><ul>${navLinks.map(([label, href]) => `<li><a href="${href}"${currentPage === href ? ' aria-current="page"' : ''}>${label}</a></li>`).join('')}<li class="nav-cta"><a href="zimmer.html#zimmeranfrage">Zimmer anfragen</a></li></ul></nav></div>`;
+  const links = navLinks.map(([label, href]) => `<a href="${href}"${currentPage === href ? ' aria-current="page"' : ''}>${label}</a>`).join('');
+  header.innerHTML = `<div class="nav-wrap"><a class="brand" href="index.html" aria-label="Erlauftalerhof – Startseite"><span class="brand-mark" aria-hidden="true">E</span><span>Erlauftalerhof<small>Kienberg · Erlauftal</small></span></a><div class="nav-right"><nav id="main-nav" aria-label="Hauptnavigation">${links}</nav><a class="nav-book" href="zimmer.html#zimmeranfrage">Zimmer anfragen</a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-nav"><span class="menu-icon" aria-hidden="true">☰</span><span class="sr-only">Menü öffnen</span></button></div></div>`;
   const toggle = header.querySelector('.menu-toggle');
+  const nav = header.querySelector('#main-nav');
+  const closeMenu = () => {
+    toggle.setAttribute('aria-expanded', 'false');
+    nav.classList.remove('is-open');
+    toggle.querySelector('.menu-icon').textContent = '☰';
+    toggle.querySelector('.sr-only').textContent = 'Menü öffnen';
+  };
   toggle.addEventListener('click', () => {
     const expanded = toggle.getAttribute('aria-expanded') === 'true';
     toggle.setAttribute('aria-expanded', String(!expanded));
-    header.querySelector('#main-nav').classList.toggle('is-open', !expanded);
+    nav.classList.toggle('is-open', !expanded);
     toggle.querySelector('.menu-icon').textContent = expanded ? '☰' : '×';
     toggle.querySelector('.sr-only').textContent = expanded ? 'Menü öffnen' : 'Menü schließen';
   });
+  nav.addEventListener('click', (event) => { if (event.target.closest('a')) closeMenu(); });
+  document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeMenu(); });
 }
 const footer = document.querySelector('#site-footer');
 if (footer) footer.innerHTML = `<div class="footer-main wrap"><div><a class="brand footer-brand" href="index.html"><span class="brand-mark" aria-hidden="true">E</span><span>Erlauftalerhof<small>Kienberg · Erlauftal</small></span></a><p>Familiäre Gastlichkeit in Kienberg/Gaming,<br>Niederösterreich.</p></div><div><h2>Kontakt</h2><p>Erlauftalstraße 109<br>A-3291 Kienberg/Gaming</p><a href="tel:+436505909803">+43 (0) 650 / 590 98 03</a><br><a href="mailto:info@erlauftalerhof.at">info@erlauftalerhof.at</a></div><div><h2>Entdecken</h2><a href="zimmer.html">Zimmer</a><a href="restaurant.html">Restaurant</a><a href="aktivitaeten.html">Freizeit & Aktivitäten</a><a href="region.html">Region & Umgebung</a><a href="kontakt.html">Kontakt & Anreise</a></div></div><div class="footer-bottom wrap"><span>© ${new Date().getFullYear()} Erlauftalerhof</span><div><a href="impressum.html">Impressum</a><a href="datenschutz.html">Datenschutz</a></div></div>`;
@@ -40,8 +50,30 @@ if (footer) footer.innerHTML = `<div class="footer-main wrap"><div><a class="bra
 document.querySelectorAll('img[data-photo]').forEach((image) => {
   const url = PHOTO_LIBRARY[image.dataset.photo];
   if (url) image.src = url;
+  image.decoding = 'async';
   image.addEventListener('error', () => image.classList.add('image-error'), { once: true });
 });
+
+// Reveal motion is progressive enhancement and respects reduced-motion preferences.
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const revealItems = document.querySelectorAll('.reveal');
+if (revealItems.length && !reduceMotion && 'IntersectionObserver' in window) {
+  document.body.classList.add('motion-ready');
+  const revealObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -35px 0px' });
+  revealItems.forEach((item) => revealObserver.observe(item));
+}
+
+// Give the fixed transparent masthead a readable surface after the hero.
+const updateHeader = () => document.body.classList.toggle('site-scrolled', window.scrollY > 24);
+updateHeader();
+window.addEventListener('scroll', updateHeader, { passive: true });
 
 // Mailto handoff is intentionally transparent: this static site does not pretend to send data to a backend.
 document.querySelectorAll('form[data-form]').forEach((form) => {
